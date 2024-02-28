@@ -22,18 +22,17 @@ void * barbeiro ( void *arg );
 void * cliente ( void *arg );
 
 int main () {
-    int idsClientes[MAX_CLIENTES];
-    int tempoChegada = 0;
-
     printf("Iniciando barbearia\n");
     printf("Informe a quantidade máxima de clientes: ");
     scanf("%d", &MAX_CLIENTES);
 
+
+    int idsClientes[MAX_CLIENTES];
     pthread_t tBarbeiros[M];
     pthread_t tClientes[MAX_CLIENTES];
 
-    sem_init( &pentes, 0, M/2 );
-    sem_init( &tesouras, 0, M/2 );
+    //sem_init( &pentes, 0, M/2 );
+    //sem_init( &tesouras, 0, M/2 );
     sem_init( &mutex, 0, 1 );
     sem_init( &barbeiros, 0, 0 );
     sem_init( &clientes, 0, 0 );
@@ -60,8 +59,8 @@ int main () {
 
 void * barbeiro( void *arg ) {
 
-    sem_wait( &mutex );
     while( 1 ) {
+    sem_wait( &mutex );
         if ( cadeirasDisponiveis == N && MAX_CLIENTES == clientesAtendidos + clientesDesistiram ) {
             sem_post( &mutex );
             pthread_exit(0);
