@@ -4,7 +4,7 @@
 #include<stdlib.h>
 #include<semaphore.h>
 
-#define N 5 // numero de cadeiras de espera
+#define N 8 // numero de cadeiras de espera
 #define M 3 // numero de barbeiros
 
 int clientesAtendidos = 0;
@@ -16,8 +16,8 @@ int numClientes = 0;
 sem_t mutex;
 sem_t barbeiros;
 sem_t clientes;
-//sem_t pentes;
-//sem_t tesouras;
+sem_t pentes;
+sem_t tesouras;
 
 void * barbeiro ( void *arg );
 void * cliente ( void *arg );
@@ -33,8 +33,8 @@ int main () {
     pthread_t tBarbeiros[M];
     pthread_t tClientes[MAX_CLIENTES];
 
-    //sem_init( &pentes, 0, M/2 );
-    //sem_init( &tesouras, 0, M/2 );
+    sem_init( &pentes, 0, M/2 );
+    sem_init( &tesouras, 0, M/2 );
     sem_init( &mutex, 0, 1 );
     sem_init( &barbeiros, 0, 0 );
     sem_init( &clientes, 0, 0 );
@@ -73,9 +73,13 @@ void * barbeiro( void *arg ) {
         sem_post( &mutex );
         printf("Barbeiro %d esperando Cliente\n", *((int *) arg));
         sem_wait( &clientes );
+        sem_wait( &tesouras);
+        sem_wait( &pentes);
         printf("Barbeiro %d esperando por equipamento\n", *((int *) arg));
         sem_wait( &mutex );
         cadeirasDisponiveis++;
+        sem_post( &tesouras );
+        sem_post( &pentes );
         sem_post( &mutex );
         sem_post( &barbeiros ); //terminou de cortar
     }
