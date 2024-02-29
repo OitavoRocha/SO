@@ -4,8 +4,8 @@
 #include<stdlib.h>
 #include<semaphore.h>
 
-#define N 3 // numero de cadeiras de espera
-#define M 4 // numero de barbeiros
+#define N 5 // numero de cadeiras de espera
+#define M 3 // numero de barbeiros
 
 int clientesAtendidos = 0;
 int clientesDesistiram = 0;
@@ -47,10 +47,10 @@ int main () {
     for ( int i = 0 ; i < MAX_CLIENTES ; i++ ) {
         idsClientes[i] = i + 1;
         pthread_create( &tClientes[i], NULL, cliente, &idsClientes[i] );
-        sleep(rand() % 2 + 1); // tempo de chegada do cliente
+        sleep( rand() % 2 + 1 ); // tempo de chegada do cliente
     }
 
-    for ( int i = 0 ; i < N + M ; i++ ) {
+    for ( int i = 0 ; i < MAX_CLIENTES ; i++ ) {
         pthread_join( tClientes[i], NULL );
         //pthread_join( tBarbeiros[i], NULL );
     }
@@ -64,7 +64,7 @@ int main () {
 void * barbeiro( void *arg ) {
 
     while( 1 ) {
-    sem_wait( &mutex );
+        sem_wait( &mutex );
         if ( cadeirasDisponiveis == N && numClientes == MAX_CLIENTES ) {
             printf("Barbeiro %d encerrando expediente\n", *((int *) arg));
             sem_post( &mutex );
@@ -77,7 +77,7 @@ void * barbeiro( void *arg ) {
         sem_wait( &mutex );
         cadeirasDisponiveis++;
         sem_post( &mutex );
-        sem_post( &barbeiros );
+        sem_post( &barbeiros ); //terminou de cortar
     }
     
     return NULL;
@@ -89,24 +89,25 @@ void * cliente( void *arg ) {
 
     
     
-    printf("Cliente %d chegou e esta esperando\n", idCliente);
     sem_wait( &mutex );
+    printf("Cliente %d chegou", idCliente);
     numClientes++;
 
     if ( cadeirasDisponiveis > 0 ) {
+        printf(" e esta esperando\n");
         cadeirasDisponiveis--;
         printf("Cadeiras disponiveis: %d\n", cadeirasDisponiveis);
-        sem_post( &clientes );
         sem_post( &mutex );
+        sem_post( &clientes );
         sem_wait( &barbeiros );
         printf("Cliente %d cortando cabelo\n", idCliente);
-        sleep(tempoCorte);
         sem_wait( &mutex );
         clientesAtendidos++;
-        printf("Cliente %d cortou o cabelo\n", idCliente);
+        sleep(tempoCorte);
         sem_post( &mutex );
+        printf("Cliente %d cortou o cabelo\n", idCliente);
     } else  {
-        printf("Cliente %d desistiu\n", idCliente);
+        printf(" e desistiu\n");
         clientesDesistiram++;
         sem_post( &mutex );
     }
